@@ -11,14 +11,13 @@ export async function GET(request) {
 
   try {
     const url = `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}`;
-    
+
     const response = await fetch(url, {
       headers: {
         'X-Riot-Token': apiKey,
       },
       cache: 'no-store',
     });
-
     const data = await response.json();
 
     if (!response.ok) {
