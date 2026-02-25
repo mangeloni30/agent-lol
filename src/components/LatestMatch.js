@@ -64,6 +64,7 @@ export function LatestMatch({ puuid }) {
   if (!matchDetails) return null;
 
   const participants = matchDetails?.info?.participants ?? [];
+  const contextSummary = matchDetails?.analysis?.context ?? null;
   const gameDuration = matchDetails?.info?.gameDuration ?? 0;
   const gameDurationMin = Math.floor(gameDuration / 60);
   const gameDurationSec = gameDuration % 60;
@@ -88,6 +89,16 @@ export function LatestMatch({ puuid }) {
         </div>
         <Participants participants={participants} ddragonVersion={ddragonVersion} />
       </div>
+      {contextSummary && (
+        <div className="mt-6 rounded-xl bg-slate-800/50 border border-slate-700/50 px-5 py-4 sm:px-6 shadow-lg">
+          <h3 className="text-sm font-semibold text-slate-200 mb-2">
+            Contexto de la partida (agente)
+          </h3>
+          <p className="text-sm leading-relaxed text-slate-300 whitespace-pre-line">
+            {contextSummary}
+          </p>
+        </div>
+      )}
     </section>
   );
 }
