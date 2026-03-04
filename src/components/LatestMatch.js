@@ -1,10 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDdragonVersion } from '@/services/ddragon';
 import { fetchMatchIds, fetchMatchDetails, fetchMatchTimeline, fetchTimelineCompare } from '@/services/match';
 import { queryKeys } from '@/services/query-keys';
 import { Participants } from '@/components/Participants';
+import { TimelineReviewer } from '@/components/TimelineReviewer';
 
 export function LatestMatch({ puuid, userGameName, userTagLine }) {
   const ddragonQuery = useQuery({
@@ -48,7 +50,6 @@ export function LatestMatch({ puuid, userGameName, userTagLine }) {
   const matchDetails = matchDetailsQuery.data;
   const timelineData = timelineQuery.data;
   const timelineCompare = timelineCompareQuery.data;
-  console.log("timelineCompare ", timelineCompare);
 
   const ddragonVersion = ddragonQuery.data;
   const error = matchIdsQuery.error ?? (matchDetailsEnabled ? matchDetailsQuery.error : null);
@@ -113,6 +114,14 @@ export function LatestMatch({ puuid, userGameName, userTagLine }) {
           >
             {matchDetails?.metadata?.matchId}
           </span>
+          {firstMatchId && (
+            <Link
+              href={`/replay?matchId=${encodeURIComponent(firstMatchId)}`}
+              className="ml-auto text-sm font-medium text-amber-400 hover:text-amber-300"
+            >
+              View 2.5D replay
+            </Link>
+          )}
         </div>
         <Participants
           participants={participants}
@@ -135,31 +144,20 @@ export function LatestMatch({ puuid, userGameName, userTagLine }) {
         <div className="mt-6 rounded-xl bg-slate-800/50 border border-slate-700/50 overflow-hidden shadow-lg">
           <div className="px-5 py-4 sm:px-6 border-b border-slate-700/50">
             <h3 className="text-sm font-semibold text-slate-200 mb-1">
-              Minuto {timelineCompare.frameMinute ?? 0}: tú vs rival en tu línea
+              Match Reviewer
             </h3>
             <p className="text-xs text-slate-500">
               {timelineCompare.userChampion} ({timelineCompare.role}) vs {timelineCompare.enemyChampion}
             </p>
           </div>
           <div className="px-5 py-4 sm:px-6">
-            {timelineCompare.comparison ? (
-              <p className="text-sm leading-relaxed text-slate-300 whitespace-pre-line">
-                {timelineCompare.comparison}
-              </p>
-            ) : (
-              <div className="text-sm text-slate-500">
-                <p>Datos al minuto {timelineCompare.frameMinute ?? 0} (sin agente). Activa ENABLE_MATCH_AGENT para la comparación con IA.</p>
-                {timelineCompare.userFrame && timelineCompare.enemyFrame && (
-                  <pre className="mt-2 text-xs overflow-auto max-h-40 bg-slate-900/50 p-3 rounded">
-                    {JSON.stringify(
-                      { tú: timelineCompare.userFrame, rival: timelineCompare.enemyFrame },
-                      null,
-                      2
-                    )}
-                  </pre>
-                )}
-              </div>
-            )}
+            <TimelineReviewer
+              timelineData={timelineData}
+              participants={participants}
+              userGameName={userGameName}
+              userTagLine={userTagLine}
+              timelineCompare={timelineCompare}
+            />
           </div>
         </div>
       )}
