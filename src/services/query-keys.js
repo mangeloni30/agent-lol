@@ -7,4 +7,7 @@ export const queryKeys = {
   account: ['riot', 'account'],
   matchIds: (puuid) => ['riot', 'match', 'ids', puuid],
   matchDetails: (matchId) => ['riot', 'match', 'details', matchId],
+  matchTimeline: (matchId) => ['riot', 'match', 'timeline', matchId],
+  matchTimelineCompare: (matchId, gameName, tagLine) =>
+    ['riot', 'match', 'timeline', 'compare', matchId, gameName, tagLine],
 };

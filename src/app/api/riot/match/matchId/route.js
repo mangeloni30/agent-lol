@@ -6,7 +6,7 @@ export async function GET(request) {
 
   const apiKey = process.env.API_KEY;
   const openaiKey = process.env.OPENAI_KEY;
-  console.log("+++++++++ openaiKey ", openaiKey)
+  const agentEnabled = process.env.ENABLE_MATCH_AGENT === 'true';
 
   if (!apiKey) {
     return NextResponse.json({ error: 'API_KEY is missing' }, { status: 500 });
@@ -40,9 +40,9 @@ export async function GET(request) {
       return NextResponse.json(data, { status: response.status });
     }
 
-    // Optionally enrich the match data with a contextual summary from OpenAI
+    // Only call OpenAI when explicitly enabled (saves tokens when disabled)
     let contextSummary = null;
-    if (openaiKey) {
+    if (openaiKey && agentEnabled) {
       try {
         const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -51,7 +51,7 @@ export async function GET(request) {
             Authorization: `Bearer ${openaiKey}`,
           },
           body: JSON.stringify({
-            model: 'gpt-4.1-mini',
+            model: 'gpt-5.1',
             temperature: 0.5,
             messages: [
               {
@@ -80,8 +80,6 @@ export async function GET(request) {
       } catch (err) {
         console.error('Error calling OpenAI for match context:', err);
       }
-    } else {
-      console.warn('OPENAI_KEY is not set; skipping contextual analysis.');
     }
 
     const enriched = contextSummary

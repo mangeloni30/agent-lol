@@ -9,7 +9,19 @@ const championImageId = (championName) => {
   return championName.replace(/\s+/g, '');
 };
 
-export function Participants({ participants = [], ddragonVersion }) {
+const normalizeTag = (t) => (t ?? '').replace(/^#/, '').trim();
+
+export function Participants({ participants = [], ddragonVersion, currentUserGameName, currentUserTagLine }) {
+  const userGame = (currentUserGameName ?? '').trim().toLowerCase();
+  const userTag = normalizeTag(currentUserTagLine).toLowerCase();
+
+  const currentUserParticipant = participants.find((participant) => {
+    const g = (participant.riotIdGameName ?? '').trim().toLowerCase();
+    const t = normalizeTag(participant.riotIdTagline).toLowerCase();
+    return userGame && userTag ? g === userGame && t === userTag : g === userGame;
+  });
+  const currentUserTeamId = currentUserParticipant != null ? Number(currentUserParticipant.teamId) : null;
+
   return (
     <div className="divide-y divide-slate-700/40">
       {participants.map((p, i) => {
@@ -19,10 +31,26 @@ export function Participants({ participants = [], ddragonVersion }) {
           ddragonVersion && cid
             ? `${DATA_DRAGON_BASE}/cdn/${ddragonVersion}/img/champion/${cid}.png`
             : null;
+        const participantGame = (p.riotIdGameName ?? '').trim().toLowerCase();
+        const participantTag = normalizeTag(p.riotIdTagline).toLowerCase();
+        const isCurrentUser = userGame && userTag
+          ? participantGame === userGame && participantTag === userTag
+          : participantGame === userGame;
+        const isTeammate =
+          currentUserTeamId != null &&
+          Number(p.teamId) === currentUserTeamId &&
+          !isCurrentUser;
+
+        const rowHighlight = isCurrentUser
+          ? 'bg-amber-950/30 border-l-4 border-l-amber-500'
+          : isTeammate
+            ? 'bg-sky-950/35 border-l-2 border-l-sky-500'
+            : '';
+
         return (
           <div
             key={p.puuid ?? i}
-            className="px-5 py-3 sm:px-6 flex flex-wrap items-center gap-3 sm:gap-4"
+            className={`px-5 py-3 sm:px-6 flex flex-wrap items-center gap-3 sm:gap-4 ${rowHighlight}`}
           >
             {championIconUrl && (
               <Image
@@ -34,6 +62,11 @@ export function Participants({ participants = [], ddragonVersion }) {
                 className="rounded-lg object-cover border border-slate-600/60 shrink-0"
               />
             )}
+            {isCurrentUser && (
+              <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold bg-amber-600/80 text-amber-100 shrink-0">
+                You
+              </span>
+            )}
             <span
               className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
                 p.win ? 'bg-emerald-900/50 text-emerald-300' : 'bg-red-900/40 text-red-300'
@@ -41,7 +74,11 @@ export function Participants({ participants = [], ddragonVersion }) {
             >
               {p.win ? 'Win' : 'Loss'}
             </span>
-            <span className="text-sm font-medium text-white">
+            <span
+              className={`text-sm font-medium ${
+                isCurrentUser ? 'text-amber-100' : isTeammate ? 'text-slate-200' : 'text-white'
+              }`}
+            >
               {p.summonerName ?? p.riotIdGameName ?? 'Unknown'}
             </span>
             <span className="text-slate-500 text-sm">

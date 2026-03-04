@@ -65,7 +65,13 @@ export default function Home() {
         )}
 
         {/* Latest match - fetches its own data */}
-        {accountData && !error && <LatestMatch puuid={puuid} />}
+        {accountData && !error && (
+          <LatestMatch
+            puuid={puuid}
+            userGameName={accountData.gameName}
+            userTagLine={accountData.tagLine}
+          />
+        )}
       </main>
     </div>
   );

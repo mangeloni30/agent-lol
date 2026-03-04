@@ -2,11 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchDdragonVersion } from '@/services/ddragon';
-import { fetchMatchIds, fetchMatchDetails } from '@/services/match';
+import { fetchMatchIds, fetchMatchDetails, fetchMatchTimeline, fetchTimelineCompare } from '@/services/match';
 import { queryKeys } from '@/services/query-keys';
 import { Participants } from '@/components/Participants';
 
-export function LatestMatch({ puuid }) {
+export function LatestMatch({ puuid, userGameName, userTagLine }) {
   const ddragonQuery = useQuery({
     queryKey: queryKeys.ddragon,
     queryFn: fetchDdragonVersion,
@@ -19,18 +19,45 @@ export function LatestMatch({ puuid }) {
   });
 
   const firstMatchId = matchIdsQuery.data?.[0] ?? null;
+  const matchDetailsEnabled = !!firstMatchId; // fetches Riot match data; OpenAI agent runs only if ENABLE_MATCH_AGENT=true in .env
   const matchDetailsQuery = useQuery({
     queryKey: queryKeys.matchDetails(firstMatchId),
     queryFn: () => fetchMatchDetails(firstMatchId),
+    staleTime: 300000, // 5 minutes
+    enabled: matchDetailsEnabled && !!firstMatchId,
+  });
+
+  const timelineQuery = useQuery({
+    queryKey: queryKeys.matchTimeline(firstMatchId),
+    queryFn: () => fetchMatchTimeline(firstMatchId),
+    staleTime: 300000,
     enabled: !!firstMatchId,
   });
 
+  const timelineCompareQuery = useQuery({
+    queryKey: queryKeys.matchTimelineCompare(firstMatchId, userGameName, userTagLine),
+    queryFn: () =>
+      fetchTimelineCompare(firstMatchId, {
+        gameName: userGameName,
+        tagLine: userTagLine,
+      }),
+    staleTime: 300000,
+    enabled: !!firstMatchId && !!userGameName,
+  });
+
   const matchDetails = matchDetailsQuery.data;
+  const timelineData = timelineQuery.data;
+  const timelineCompare = timelineCompareQuery.data;
+  console.log("timelineCompare ", timelineCompare);
+
   const ddragonVersion = ddragonQuery.data;
-  const error = matchIdsQuery.error ?? matchDetailsQuery.error;
+  const error = matchIdsQuery.error ?? (matchDetailsEnabled ? matchDetailsQuery.error : null);
   const loading =
     matchIdsQuery.isPending ||
-    (matchIdsQuery.isSuccess && matchIdsQuery.data?.length > 0 && matchDetailsQuery.isPending);
+    (matchDetailsEnabled &&
+      matchIdsQuery.isSuccess &&
+      matchIdsQuery.data?.length > 0 &&
+      matchDetailsQuery.isPending);
 
   if (!puuid) return null;
   if (loading && !error) {
@@ -87,7 +114,12 @@ export function LatestMatch({ puuid }) {
             {matchDetails?.metadata?.matchId}
           </span>
         </div>
-        <Participants participants={participants} ddragonVersion={ddragonVersion} />
+        <Participants
+          participants={participants}
+          ddragonVersion={ddragonVersion}
+          currentUserGameName={userGameName}
+          currentUserTagLine={userTagLine}
+        />
       </div>
       {contextSummary && (
         <div className="mt-6 rounded-xl bg-slate-800/50 border border-slate-700/50 px-5 py-4 sm:px-6 shadow-lg">
@@ -97,6 +129,38 @@ export function LatestMatch({ puuid }) {
           <p className="text-sm leading-relaxed text-slate-300 whitespace-pre-line">
             {contextSummary}
           </p>
+        </div>
+      )}
+      {timelineCompare && (
+        <div className="mt-6 rounded-xl bg-slate-800/50 border border-slate-700/50 overflow-hidden shadow-lg">
+          <div className="px-5 py-4 sm:px-6 border-b border-slate-700/50">
+            <h3 className="text-sm font-semibold text-slate-200 mb-1">
+              Minuto {timelineCompare.frameMinute ?? 0}: tú vs rival en tu línea
+            </h3>
+            <p className="text-xs text-slate-500">
+              {timelineCompare.userChampion} ({timelineCompare.role}) vs {timelineCompare.enemyChampion}
+            </p>
+          </div>
+          <div className="px-5 py-4 sm:px-6">
+            {timelineCompare.comparison ? (
+              <p className="text-sm leading-relaxed text-slate-300 whitespace-pre-line">
+                {timelineCompare.comparison}
+              </p>
+            ) : (
+              <div className="text-sm text-slate-500">
+                <p>Datos al minuto {timelineCompare.frameMinute ?? 0} (sin agente). Activa ENABLE_MATCH_AGENT para la comparación con IA.</p>
+                {timelineCompare.userFrame && timelineCompare.enemyFrame && (
+                  <pre className="mt-2 text-xs overflow-auto max-h-40 bg-slate-900/50 p-3 rounded">
+                    {JSON.stringify(
+                      { tú: timelineCompare.userFrame, rival: timelineCompare.enemyFrame },
+                      null,
+                      2
+                    )}
+                  </pre>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </section>
