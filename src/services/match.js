@@ -5,6 +5,7 @@
  * @throws {Error} When the API returns an error response
  */
 export async function fetchMatchIds(puuid) {
+  console.log('fetchMatchIds', puuid);
   const response = await fetch(`/api/riot/match/by-puuid/ids?puuid=${puuid}`);
   const data = await response.json();
 

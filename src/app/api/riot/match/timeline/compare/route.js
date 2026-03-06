@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getRiotSessionOrFail } from '@/lib/auth-server';
 
 const RIOT_MATCH_URL = (matchId) =>
   `https://americas.api.riotgames.com/lol/match/v5/matches/${matchId}`;
@@ -10,18 +11,17 @@ function normalizeTag(t) {
 }
 
 export async function GET(request) {
+  const { session, response } = await getRiotSessionOrFail(NextResponse, request);
+  if (response) return response;
+
   const { searchParams } = new URL(request.url);
   const matchId = searchParams.get('matchId');
-  const gameName = searchParams.get('gameName') || process.env.GAME_NAME;
-  const tagLine = searchParams.get('tagLine') || process.env.TAG_LINE;
+  const gameName = searchParams.get('gameName') ?? session.gameName;
+  const tagLine = searchParams.get('tagLine') ?? session.tagLine;
 
-  const apiKey = process.env.API_KEY;
   const openaiKey = process.env.OPENAI_KEY;
   const agentEnabled = process.env.ENABLE_MATCH_AGENT === 'true';
 
-  if (!apiKey) {
-    return NextResponse.json({ error: 'API_KEY is missing' }, { status: 500 });
-  }
   if (!matchId) {
     return NextResponse.json({ error: 'matchId is required' }, { status: 400 });
   }
@@ -32,11 +32,11 @@ export async function GET(request) {
   try {
     const [matchRes, timelineRes] = await Promise.all([
       fetch(RIOT_MATCH_URL(matchId), {
-        headers: { 'X-Riot-Token': apiKey },
+        headers: { 'X-Riot-Token': session.apiKey },
         cache: 'no-store',
       }),
       fetch(RIOT_TIMELINE_URL(matchId), {
-        headers: { 'X-Riot-Token': apiKey },
+        headers: { 'X-Riot-Token': session.apiKey },
         cache: 'no-store',
       }),
     ]);

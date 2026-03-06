@@ -1,0 +1,42 @@
+{
+  "metadata": { "matchId": "EVAL_FIXTURE_001" },
+  "info": {
+    "gameDuration": 1842,
+    "teams": [
+      {
+        "teamId": 100,
+        "win": true,
+        "objectives": {
+          "champion": { "first": true, "kills": 28 },
+          "tower": { "first": true, "kills": 9 },
+          "inhibitor": { "first": true, "kills": 1 },
+          "dragon": { "first": true, "kills": 3 },
+          "baron": { "first": true, "kills": 1 }
+        }
+      },
+      {
+        "teamId": 200,
+        "win": false,
+        "objectives": {
+          "champion": { "first": false, "kills": 22 },
+          "tower": { "first": false, "kills": 4 },
+          "inhibitor": { "first": false, "kills": 0 },
+          "dragon": { "first": false, "kills": 1 },
+          "baron": { "first": false, "kills": 0 }
+        }
+      }
+    ],
+    "participants": [
+      { "participantId": 1, "teamId": 100, "win": true, "championName": "Janna", "teamPosition": "UTILITY", "kills": 1, "deaths": 4, "assists": 18, "goldEarned": 9500, "totalDamageDealtToChampions": 8200, "visionScore": 85 },
+      { "participantId": 2, "teamId": 100, "win": true, "championName": "Jinx", "teamPosition": "BOTTOM", "kills": 12, "deaths": 2, "assists": 6, "goldEarned": 14500, "totalDamageDealtToChampions": 32000, "visionScore": 22 },
+      { "participantId": 3, "teamId": 100, "win": true, "championName": "Lee Sin", "teamPosition": "JUNGLE", "kills": 5, "deaths": 4, "assists": 14, "goldEarned": 11200, "totalDamageDealtToChampions": 15000, "visionScore": 45 },
+      { "participantId": 4, "teamId": 100, "win": true, "championName": "Orianna", "teamPosition": "MIDDLE", "kills": 6, "deaths": 3, "assists": 10, "goldEarned": 12800, "totalDamageDealtToChampions": 22000, "visionScore": 28 },
+      { "participantId": 5, "teamId": 100, "win": true, "championName": "Garen", "teamPosition": "TOP", "kills": 4, "deaths": 5, "assists": 8, "goldEarned": 11000, "totalDamageDealtToChampions": 18000, "visionScore": 18 },
+      { "participantId": 6, "teamId": 200, "win": false, "championName": "Thresh", "teamPosition": "UTILITY", "kills": 0, "deaths": 6, "assists": 12, "goldEarned": 8200, "totalDamageDealtToChampions": 6100, "visionScore": 72 },
+      { "participantId": 7, "teamId": 200, "win": false, "championName": "Kai'Sa", "teamPosition": "BOTTOM", "kills": 8, "deaths": 5, "assists": 4, "goldEarned": 12200, "totalDamageDealtToChampions": 25000, "visionScore": 18 },
+      { "participantId": 8, "teamId": 200, "win": false, "championName": "Hecarim", "teamPosition": "JUNGLE", "kills": 3, "deaths": 6, "assists": 9, "goldEarned": 9800, "totalDamageDealtToChampions": 12000, "visionScore": 38 },
+      { "participantId": 9, "teamId": 200, "win": false, "championName": "Zed", "teamPosition": "MIDDLE", "kills": 7, "deaths": 4, "assists": 2, "goldEarned": 11500, "totalDamageDealtToChampions": 21000, "visionScore": 15 },
+      { "participantId": 10, "teamId": 200, "win": false, "championName": "Darius", "teamPosition": "TOP", "kills": 4, "deaths": 6, "assists": 3, "goldEarned": 10200, "totalDamageDealtToChampions": 16500, "visionScore": 12 }
+    ]
+  }
+}
