@@ -1,46 +1,27 @@
 import { NextResponse } from 'next/server';
+import { getRiotSessionOrFail } from '@/lib/auth-server';
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const matchId = searchParams.get('matchId');
+  const { session, response } = await getRiotSessionOrFail(NextResponse, request);
+  if (response) return response;
 
-  const apiKey = process.env.API_KEY;
-  const openaiKey = process.env.OPENAI_KEY;
-  const agentEnabled = process.env.ENABLE_MATCH_AGENT === 'true';
-
-  if (!apiKey) {
-    return NextResponse.json({ error: 'API_KEY is missing' }, { status: 500 });
-  }
-
+  const matchId = request.nextUrl.searchParams.get('matchId');
   if (!matchId) {
     return NextResponse.json({ error: 'matchId is required' }, { status: 400 });
   }
 
+  const openaiKey = process.env.OPENAI_KEY;
+  const agentEnabled = process.env.ENABLE_MATCH_AGENT === 'true';
+
   try {
     const url = `https://americas.api.riotgames.com/lol/match/v5/matches/${matchId}`;
-
-    console.log('=== Making API Request: Get Match Details ===');
-    console.log('Match ID:', matchId);
-    console.log('URL:', url);
-
-    const response = await fetch(url, {
-      headers: {
-        'X-Riot-Token': apiKey,
-      },
+    const res = await fetch(url, {
+      headers: { 'X-Riot-Token': session.apiKey },
       cache: 'no-store',
     });
+    const data = await res.json();
+    if (!res.ok) return NextResponse.json(data, { status: res.status });
 
-    const data = await response.json();
-
-    console.log('=== API Response: Match Details ===');
-    console.log('Response:', data);
-    console.log('==========================================');
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
-    }
-
-    // Only call OpenAI when explicitly enabled (saves tokens when disabled)
     let contextSummary = null;
     if (openaiKey && agentEnabled) {
       try {
@@ -68,14 +49,11 @@ export async function GET(request) {
             ],
           }),
         });
-
         const openaiJson = await openaiRes.json();
-
-        if (!openaiRes.ok) {
-          console.error('OpenAI API error:', openaiJson);
+        if (openaiRes.ok) {
+          contextSummary = openaiJson?.choices?.[0]?.message?.content?.trim() || null;
         } else {
-          contextSummary =
-            openaiJson?.choices?.[0]?.message?.content?.trim() || null;
+          console.error('OpenAI API error:', openaiJson);
         }
       } catch (err) {
         console.error('Error calling OpenAI for match context:', err);
@@ -85,7 +63,6 @@ export async function GET(request) {
     const enriched = contextSummary
       ? { ...data, analysis: { context: contextSummary } }
       : data;
-
     return NextResponse.json(enriched);
   } catch (error) {
     console.error('Error fetching match details:', error);
